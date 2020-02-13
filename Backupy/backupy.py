@@ -55,10 +55,10 @@ class Backupy:
         self.filename_prefix = prefix
         return self.filename_prefix
 
-    def set_date_format(self, format):
+    def set_date_format(self, dformat):
         try:
-            datetime.today().strftime(format)
-            self.date_format = format
+            datetime.today().strftime(dformat)
+            self.date_format = dformat
         except ValueError:
             raise ValueError("Incorrect date format.")
         return self.date_format
