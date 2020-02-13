@@ -3,9 +3,11 @@ from Backupy import Backupy
 backup = Backupy()
 backup.add_directory(
     backup_directory='/var/www/html/assets/',
-    exclude_directories={
+    exclude={
         'images',
-        'fonts/images'
+        'fonts/images',
+        '*/sass/*m*.sass',
+        'logs/log.txt'
     }
 )
 backup.start()
