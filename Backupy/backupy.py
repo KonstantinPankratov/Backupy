@@ -60,11 +60,11 @@ class Backupy:
 
     def __zip(self, path, zipf):
         for root, dirs, files in os.walk(path):
-
-            if root in self.exclude:
-                for ex in self.exclude[root]:
-                    dirs.remove(ex)
-
+            parent = os.path.relpath(root, path)
+            if path in self.exclude:
+                for d in dirs:
+                    if os.path.normpath(os.path.join(parent, d)) in self.exclude[path]:
+                        dirs.remove(d)
             for file in files:
                 complete = os.path.join(root, file)
                 if complete not in self.exclude:
