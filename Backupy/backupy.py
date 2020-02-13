@@ -10,9 +10,15 @@ class Backupy:
     compress = True
 
     filename = None
-    filename_prefix = 'backup_'
-    filename_format = '{prefix}{date}'
-    date_format = '%d-%m-%Y'
+    filename_prefix = None
+    filename_format = None
+    date_format = None
+
+    def __init__(self, filename_prefix='backup_', filename_format='{prefix}{date}', date_format='%d-%m-%Y'):
+        self.filename_prefix = filename_prefix
+        self.filename_format = filename_format
+        self.date_format = date_format
+        self.__set_filename()
 
     def add_directory(self, backup_directory, exclude_directories=None):
 
@@ -26,7 +32,8 @@ class Backupy:
         return self.backup
 
     def start(self):
-        self.set_filename()
+        if not self.backup:
+            raise Exception("No directories to backup. Use add_directory()")
 
         if self.compress:
             zipf = zipfile.ZipFile(os.path.join(self.destination, self.filename), 'w', zipfile.ZIP_DEFLATED)
@@ -46,22 +53,10 @@ class Backupy:
         self.destination = path
         return self.destination
 
-    def set_filename(self):
+    def __set_filename(self):
         date = datetime.today().strftime(self.date_format)
         self.filename = self.filename_format.format(prefix=self.filename_prefix, date=date)
         return self.filename
-
-    def set_filename_prefix(self, prefix):
-        self.filename_prefix = prefix
-        return self.filename_prefix
-
-    def set_date_format(self, dformat):
-        try:
-            datetime.today().strftime(dformat)
-            self.date_format = dformat
-        except ValueError:
-            raise ValueError("Incorrect date format.")
-        return self.date_format
 
     def __zip(self, path, zipf):
         for root, dirs, files in os.walk(path):
