@@ -6,7 +6,7 @@ from datetime import datetime
 class Backupy:
     destination = os.getcwd()
     backup = list()
-    exclude = list()
+    exclude = dict()
     compress = True
 
     filename = None
@@ -14,8 +14,15 @@ class Backupy:
     filename_format = '{prefix}{date}'
     date_format = '%d-%m-%Y'
 
-    def add_directory(self, directory):
-        self.backup.append(directory)
+    def add_directory(self, backup_directory, exclude_directories=None):
+
+        self.exclude[backup_directory] = list()
+
+        if exclude_directories:
+            for d in exclude_directories:
+                self.exclude[backup_directory].append(d)
+
+        self.backup.append(backup_directory)
         return self.backup
 
     def start(self):
@@ -25,7 +32,7 @@ class Backupy:
             zipf = zipfile.ZipFile(os.path.join(self.destination, self.filename), 'w', zipfile.ZIP_DEFLATED)
             for d in self.backup:
                 self.__zip(d, zipf)
-                zipf.close()
+            zipf.close()
 
     def set_destination(self, path):
         if not os.path.exists(path):
@@ -56,9 +63,15 @@ class Backupy:
             raise ValueError("Incorrect date format.")
         return self.date_format
 
-    @staticmethod
-    def __zip(path, zipf):
+    def __zip(self, path, zipf):
         for root, dirs, files in os.walk(path):
+
+            if root in self.exclude:
+                for ex in self.exclude[root]:
+                    dirs.remove(ex)
+
             for file in files:
-                zipf.write(os.path.join(root, file))
+                complete = os.path.join(root, file)
+                if complete not in self.exclude:
+                    zipf.write(complete)
 
