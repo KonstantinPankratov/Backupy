@@ -4,24 +4,24 @@ from datetime import datetime
 
 
 class Backupy:
-    destination = os.getcwd()
     backup = list()
     exclude = dict()
     compress = True
+    destination = None
 
     filename = None
     filename_prefix = None
     filename_format = None
     date_format = None
 
-    def __init__(self, filename_prefix='backup_', filename_format='{prefix}{date}', date_format='%d-%m-%Y'):
+    def __init__(self, save_to=os.getcwd(), filename_prefix='backup_', filename_format='{prefix}{date}', date_format='%d-%m-%Y'):
         self.filename_prefix = filename_prefix
         self.filename_format = filename_format
         self.date_format = date_format
+        self.__set_destination(save_to)
         self.__set_filename()
 
     def add_directory(self, backup_directory, exclude_directories=None):
-
         self.exclude[backup_directory] = list()
 
         if exclude_directories:
@@ -41,7 +41,7 @@ class Backupy:
                 self.__zip(d, zipf)
             zipf.close()
 
-    def set_destination(self, path):
+    def __set_destination(self, path):
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
