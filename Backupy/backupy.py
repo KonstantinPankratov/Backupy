@@ -9,10 +9,16 @@ class Backupy:
     exclude = dict()
     backup_dir = None
 
+    archive = None
     filename = None
     filename_prefix = None
     filename_format = None
     date_format = None
+
+    db_host = None
+    db_user = None
+    db_pass = None
+    db_name = None
 
     def __init__(self, backup_directory=os.getcwd(), filename_prefix='backup_', filename_format='{prefix}{date}', date_format='%d-%m-%Y'):
         self.filename_prefix = filename_prefix
@@ -31,14 +37,41 @@ class Backupy:
         self.dirs.append(directory)
         return self.dirs
 
-    def start(self):
-        if not self.dirs:
-            raise Exception("No directories to backup. Use add_directory()")
+    def add_database_credentials(self, host, user, password, databases=None):
+        self.db_host = host
+        self.db_name = databases
+        self.db_user = user
+        self.db_pass = password
 
-        zipf = zipfile.ZipFile(os.path.join(self.backup_dir, self.filename), 'w', zipfile.ZIP_DEFLATED)
+    def start(self):
+        self.archive = zipfile.ZipFile(os.path.join(self.backup_dir, self.filename), 'w', zipfile.ZIP_DEFLATED)
+        self.backup_files()
+        self.backup_database()
+        self.archive.close()
+
+    def backup_files(self):
+        if not self.dirs:
+            print("Notice: to backup files use add_directory()")
+            return False
         for d in self.dirs:
-            self.__zip(d, zipf)
-        zipf.close()
+            self.__zip(d)
+        return True
+
+    def backup_database(self):
+        if not self.db_host and not self.db_user and not self.db_pass:
+            print("Notice: to backup database use add_database_credentials()")
+            return False
+        db = '--databases {}'.format(self.db_name)
+        if not self.db_name:
+            db = '--all-databases'
+        filename = 'mysqldump.sql'
+        output = os.path.join(self.backup_dir, filename)
+        sql = 'mysqldump -h {host} -u {user} --password={password} {db} > {out}'
+        sql = sql.format(host=self.db_host, user=self.db_user, password=self.db_pass, db=db, out=output)
+        os.popen(sql).read()
+        self.archive.write(output, filename)
+        os.remove(output)
+        return True
 
     def __set_backup_dir(self, path):
         if not os.path.exists(path):
@@ -57,7 +90,7 @@ class Backupy:
         self.filename = self.filename_format.format(prefix=self.filename_prefix, date=date)
         return self.filename
 
-    def __zip(self, path, zipf):
+    def __zip(self, path):
         for root, dirs, files in os.walk(path):
             parent = os.path.relpath(root, path)
             if path in self.exclude and len(self.exclude[path]) != 0:
@@ -78,4 +111,5 @@ class Backupy:
                             files.remove(file)
                             skip = True
                 if complete not in self.exclude and not skip:
-                    zipf.write(complete)
+                    self.archive.write(complete)
+        return True
