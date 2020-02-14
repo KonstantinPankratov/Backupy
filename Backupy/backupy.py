@@ -5,7 +5,7 @@ from fnmatch import fnmatch
 
 
 class Backupy:
-    dirs = list()
+    dirs = tuple()
     exclude = dict()
     backup_dir = None
 
@@ -34,7 +34,7 @@ class Backupy:
             for d in exclude:
                 self.exclude[directory].append(d)
 
-        self.dirs.append(directory)
+        self.dirs = self.dirs + (directory, )
         return self.dirs
 
     def add_database_credentials(self, host, user, password, databases=None):
