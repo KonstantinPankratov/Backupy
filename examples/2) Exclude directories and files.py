@@ -2,7 +2,7 @@ from Backupy import Backupy
 
 backup = Backupy()
 backup.add_directory(
-    backup_directory='/var/www/html/assets/',
+    directory='/var/www/html/assets/',
     exclude={
         'images',
         'fonts/images',
